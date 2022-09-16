@@ -6,6 +6,7 @@ import { EntityMetadata } from "../metadata/EntityMetadata"
 import { DriverUtils } from "../driver/DriverUtils"
 import { FindTreeOptions } from "./FindTreeOptions"
 import { ObjectLiteral } from "../common/ObjectLiteral"
+import {FindOptionsRelations} from "./FindOptionsRelations";
 
 /**
  * Utilities to work with FindOptions.
@@ -408,5 +409,17 @@ export class FindOptionsUtils {
                 relation.inverseEntityMetadata,
             )
         })
+    }
+
+    public static getFindOptionsRelationsFromRelationMetadata<Entity>(metadata: EntityMetadata) {
+        let relations: FindOptionsRelations<Entity> = {};
+        for (const eagerRelation of metadata.eagerRelations) {
+            relations = {
+                ...relations,
+                [<keyof Entity>eagerRelation.propertyPath]: true
+            };
+        }
+
+        return relations;
     }
 }

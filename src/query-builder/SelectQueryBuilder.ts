@@ -53,7 +53,7 @@ export class SelectQueryBuilder<Entity extends ObjectLiteral>
 {
     readonly "@instanceof" = Symbol.for("SelectQueryBuilder")
 
-    protected findOptions: FindManyOptions = {}
+    public findOptions: FindManyOptions = {}
     protected selects: string[] = []
     protected joins: {
         type: "inner" | "left"
@@ -3174,11 +3174,22 @@ export class SelectQueryBuilder<Entity extends ObjectLiteral>
             }
 
             if (this.findOptions.loadEagerRelations !== false) {
-                FindOptionsUtils.joinEagerRelations(
-                    this,
-                    this.expressionMap.mainAlias!.name,
-                    this.expressionMap.mainAlias!.metadata,
-                )
+                if (this.expressionMap.relationLoadStrategy === "join") {
+                    FindOptionsUtils.joinEagerRelations(
+                        this,
+                        this.expressionMap.mainAlias!.name,
+                        this.expressionMap.mainAlias!.metadata,
+                    )
+                } else {
+                    this.buildRelations(
+                        FindOptionsUtils.getFindOptionsRelationsFromRelationMetadata(this.expressionMap.mainAlias!.metadata),
+                        typeof this.findOptions.select === "object"
+                            ? (this.findOptions.select as FindOptionsSelect<any>)
+                            : undefined,
+                        this.expressionMap.mainAlias!.metadata,
+                        this.expressionMap.mainAlias!.name,
+                    );
+                }
             }
 
             if (this.findOptions.transaction === true) {
@@ -3703,7 +3714,7 @@ export class SelectQueryBuilder<Entity extends ObjectLiteral>
         }
     }
 
-    protected buildRelations(
+    public buildRelations(
         relations: FindOptionsRelations<any>,
         selection: FindOptionsSelect<any> | undefined,
         metadata: EntityMetadata,
@@ -3745,7 +3756,9 @@ export class SelectQueryBuilder<Entity extends ObjectLiteral>
                     typeof relationValue === "object"
                 ) {
                     if (this.expressionMap.relationLoadStrategy === "query") {
-                        this.relationMetadatas.push(relation)
+                        if (this.relationMetadatas.findIndex((rm) => rm.propertyPath === relation.propertyPath) === -1) {
+                            this.relationMetadatas.push(relation)
+                        }
                     } else {
                         // join
                         this.joins.push({
