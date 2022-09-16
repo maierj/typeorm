@@ -10,7 +10,7 @@ import { Comment } from "./entity/comment.entity"
 import { Like } from "./entity/like.entity"
 import { expect } from "chai"
 
-describe.only("github issues > #9006 Eager relations do not respect relationLoadStrategy", () => {
+describe("github issues > #9006 Eager relations do not respect relationLoadStrategy", () => {
     let dataSources: DataSource[]
     before(
         async () =>
